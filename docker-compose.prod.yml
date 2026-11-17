@@ -1,0 +1,93 @@
+name: fintwin-api
+
+services:
+  fintwin-api:
+    build:
+      context: .
+      dockerfile: docker/production/Dockerfile
+    image: fintwin-api:latest
+    container_name: fintwin-api
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RUN_MIGRATIONS: "true"
+    depends_on:
+      fintwin-mysql:
+        condition: service_healthy
+      fintwin-redis:
+        condition: service_healthy
+    networks:
+      - fintwin-internal
+      - infra-net
+
+  fintwin-queue:
+    image: fintwin-api:latest
+    container_name: fintwin-queue
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RUN_MIGRATIONS: "false"
+    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--max-time=3600"]
+    depends_on:
+      fintwin-api:
+        condition: service_started
+      fintwin-mysql:
+        condition: service_healthy
+      fintwin-redis:
+        condition: service_healthy
+    networks:
+      - fintwin-internal
+
+  fintwin-mysql:
+    image: mysql:8.0
+    container_name: fintwin-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-fintwin}
+      MYSQL_USER: ${DB_USERNAME:-fintwin}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-${DB_PASSWORD}}
+    volumes:
+      - fintwin_mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p\"$$MYSQL_ROOT_PASSWORD\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fintwin-internal
+
+  fintwin-redis:
+    image: redis:7-alpine
+    container_name: fintwin-redis
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes:
+      - fintwin_redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" ping | grep PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fintwin-internal
+
+  fintwin-otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.114.0
+    container_name: fintwin-otel-collector
+    restart: unless-stopped
+    command: ["--config=/etc/otelcol-contrib/config.yaml"]
+    volumes:
+      - ./docker/otel/otel-collector-prod.yaml:/etc/otelcol-contrib/config.yaml:ro
+    networks:
+      - fintwin-internal
+
+networks:
+  fintwin-internal:
+    driver: bridge
+  infra-net:
+    external: true
+
+volumes:
+  fintwin_mysql_data:
+  fintwin_redis_data:

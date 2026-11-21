@@ -16,9 +16,15 @@ class PluggyConnectService
      */
     public function createToken(User $user, ?string $itemId = null): array
     {
+        $configuredWebhookUrl = config('integrations.pluggy.webhook_url');
+        $webhookUrl = is_string($configuredWebhookUrl) && trim($configuredWebhookUrl) !== ''
+            ? trim($configuredWebhookUrl)
+            : null;
+
         $response = $this->pluggy->createConnectToken(
             itemId: $itemId,
             clientUserId: (string) $user->id,
+            webhookUrl: $webhookUrl,
         );
 
         return [

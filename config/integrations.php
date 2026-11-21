@@ -33,5 +33,16 @@ return [
         'api_token' => env('BRAPI_API_TOKEN'),
         'timeout' => (int) env('BRAPI_TIMEOUT', 15),
         'connect_timeout' => (int) env('BRAPI_CONNECT_TIMEOUT', 5),
+        'quote_batch_size' => max(1, (int) env('BRAPI_QUOTE_BATCH_SIZE', 1)),
+    ],
+
+    'google' => [
+        'tokeninfo_base_url' => env('GOOGLE_TOKENINFO_BASE_URL', 'https://oauth2.googleapis.com'),
+        'client_ids' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('GOOGLE_CLIENT_IDS', (string) env('GOOGLE_CLIENT_ID', ''))),
+        ))),
+        'timeout' => (int) env('GOOGLE_AUTH_TIMEOUT', 10),
+        'connect_timeout' => (int) env('GOOGLE_AUTH_CONNECT_TIMEOUT', 5),
     ],
 ];

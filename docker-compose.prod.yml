@@ -24,10 +24,29 @@ services:
     image: fintwin-api:latest
     container_name: fintwin-queue
     restart: unless-stopped
+    stop_grace_period: 60s
     env_file: .env
     environment:
       RUN_MIGRATIONS: "false"
-    command: ["php", "artisan", "queue:work", "redis", "--sleep=3", "--tries=3", "--max-time=3600"]
+    command: ["php", "artisan", "horizon"]
+    depends_on:
+      fintwin-api:
+        condition: service_started
+      fintwin-mysql:
+        condition: service_healthy
+      fintwin-redis:
+        condition: service_healthy
+    networks:
+      - fintwin-internal
+
+  fintwin-scheduler:
+    image: fintwin-api:latest
+    container_name: fintwin-scheduler
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      RUN_MIGRATIONS: "false"
+    command: ["php", "artisan", "schedule:work"]
     depends_on:
       fintwin-api:
         condition: service_started

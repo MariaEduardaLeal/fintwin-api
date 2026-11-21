@@ -51,6 +51,24 @@ Todos os clientes são registrados como **singletons** em `AppServiceProvider` u
   - `chatCompletion(array $messages, array $options = [])`: envia `POST /chat/completions` com `Authorization: Bearer {DEEPSEEK_API_KEY}` e modelo configurável (`DEEPSEEK_MODEL=deepseek-chat`).
 - **`BrapiClient` (`app/Integrations/Brapi/BrapiClient.php`):**
   - `getQuotes(array $tickers, array $params = [])` e `getQuoteWithDividends(string $ticker)`: consulta `GET /quote/{tickers}` com `Bearer {BRAPI_API_TOKEN}` quando configurado.
+- **`GoogleAuthClient` (`app/Integrations/Google/GoogleAuthClient.php`):**
+  - `verifyIdToken(string $idToken)`: valida o `id_token` enviado pelo app mobile contra o endpoint `tokeninfo` do Google (`GOOGLE_TOKENINFO_BASE_URL`), checando `email_verified`, `iss`, `exp` e correspondência estrita do `aud` com `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_IDS`.
+
+---
+
+## 3.1 Autenticação (`AuthController` + `AuthService`)
+- `POST /api/v1/auth/register`, `POST /api/v1/auth/login`, `POST /api/v1/auth/google` (rate limit `10/min`) e `POST /api/v1/auth/logout` (`auth:sanctum`).
+- Novos usuários via Google ou cadastro tradicional já recebem automaticamente um `UserFinancialProfile` padrão dentro de `DB::transaction`, além de token Sanctum Bearer.
+
+---
+
+## 3.2 Mensageria, Laravel Horizon e Agendamento (`routes/console.php`)
+- **Horizon (`config/horizon.php` + `HorizonServiceProvider`):**
+  - Supervisores dedicados para `open-finance`, `market-data` e `default`, com painel `/horizon` restrito a `HORIZON_ALLOWED_EMAILS` em produção.
+  - Em produção (`docker-compose.prod.yml`), `fintwin-queue` executa `php artisan horizon` e `fintwin-scheduler` executa `php artisan schedule:work`.
+- **Jobs assíncronos (`app/Jobs/`):**
+  - `SyncPluggyBankTransactionsJob` e `SyncPluggyCreditInvoicesJob` (fila `open-finance`, `ShouldBeUnique`) disparados por `BankSyncRequestedEvent` -> `DispatchPluggySyncJobsListener` via `POST /api/v1/sync/open-finance`.
+  - `SyncAssetPricesJob` (pregão B3 dias úteis `10:15`–`18:15` + fechamento `19:00` BRT) e `SyncFutureDividendsJob` (diariamente às `07:00` BRT) na fila `market-data`.
 
 ---
 

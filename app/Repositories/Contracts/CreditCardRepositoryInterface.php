@@ -26,6 +26,16 @@ interface CreditCardRepositoryInterface
      */
     public function upsertInvoice(int $userId, int $creditCardId, string $referenceMonth, array $attributes): Invoice;
 
+    public function findOrCreateFutureInvoice(
+        int $userId,
+        int $creditCardId,
+        string $referenceMonth,
+        CarbonInterface $closingDate,
+        CarbonInterface $dueDate,
+    ): Invoice;
+
+    public function recalculateFutureInvoicesTotal(int $creditCardId): void;
+
     /**
      * @param  array<string, mixed>  $match
      * @param  array<string, mixed>  $attributes

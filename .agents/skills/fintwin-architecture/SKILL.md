@@ -24,9 +24,9 @@ Seu objetivo é consolidar contas bancárias, faturas e parcelas futuras de cart
 
 | Fase | Escopo | Status |
 | :--- | :--- | :--- |
-| **Fase 1** | Infraestrutura, `.env`, Docker (Nginx, Sail, MySQL 8.0, Redis, OTel), Sanctum, `laravel-clean-flow`, Guzzle (`PluggyClient`, `DeepSeekClient`, `BrapiClient`) + Deploy HTTPS em `fintwin.freedevs.tech` | Implementado |
-| **Fase 2** | Modelagem MySQL (11 migrations dos 5 domínios), 8 Enums, 12 Models, `CategorySeeder` e 5 Repositories com contratos/implementações | Implementado |
-| **Fase 3** | Motor de Ingestão assíncrono (Laravel Horizon + Jobs Pluggy/Brapi/Proventos) | Planejado |
+| **Fase 1** | Infraestrutura, `.env`, Docker (Nginx, Sail, MySQL 8.0, Redis, OTel), Sanctum, `laravel-clean-flow`, Guzzle (`PluggyClient`, `DeepSeekClient`, `BrapiClient`, `GoogleAuthClient`) + Deploy HTTPS em `fintwin.freedevs.tech` | Implementado |
+| **Fase 2** | Modelagem MySQL (11 migrations dos 5 domínios + colunas Google Auth), 8 Enums, 12 Models, `CategorySeeder` e 5 Repositories com contratos/implementações | Implementado |
+| **Fase 3** | Autenticação Sanctum + Google Sign-In + Motor de Ingestão assíncrono (Laravel Horizon, filas `open-finance`/`market-data`, categorização Regex, unrolling de parcelas futuras, Jobs Pluggy/Brapi/Proventos e Scheduler) | Implementado |
 | **Fase 4** | Core do Gêmeo Digital (`SimulationRequestDto`, `FutureDebtCommitmentService`, `FinancialSimulationService` com cache Redis) | Planejado |
 | **Fase 5** | Conselheiro AI (`AiPurchaseDecisionService` + System Prompt para DeepSeek) | Planejado |
 | **Fases 6–9** | App mobile React Native (`fintwin-mobile`: Pluggy Connect, Dashboard "E Se?", Chatbot AI, Timeline de Renda, APK Release) | Planejado |

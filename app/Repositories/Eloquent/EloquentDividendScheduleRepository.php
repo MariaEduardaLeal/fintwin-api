@@ -12,10 +12,33 @@ class EloquentDividendScheduleRepository implements DividendScheduleRepositoryIn
 {
     public function upsertDividend(int $assetId, array $match, array $attributes): DividendSchedule
     {
-        return DividendSchedule::query()->updateOrCreate(
-            array_merge($match, ['asset_id' => $assetId]),
+        $type = $match['type'];
+        $paymentDate = (string) $match['payment_date'];
+        $amountPerShare = round((float) $match['amount_per_share'], 6);
+
+        $existing = DividendSchedule::query()
+            ->where('asset_id', $assetId)
+            ->where('type', $type)
+            ->whereDate('payment_date', $paymentDate)
+            ->get()
+            ->first(static fn (DividendSchedule $row): bool => abs((float) $row->amount_per_share - $amountPerShare) < 0.0000005);
+
+        if ($existing !== null) {
+            $existing->fill($attributes);
+            $existing->save();
+
+            return $existing->refresh();
+        }
+
+        return DividendSchedule::query()->create(array_merge(
             $attributes,
-        );
+            [
+                'asset_id' => $assetId,
+                'type' => $type,
+                'payment_date' => $paymentDate,
+                'amount_per_share' => $amountPerShare,
+            ],
+        ));
     }
 
     public function getUpcomingDividendsForUser(int $userId, CarbonInterface $from, CarbonInterface $to): Collection

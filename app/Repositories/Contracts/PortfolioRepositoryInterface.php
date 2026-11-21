@@ -5,6 +5,7 @@ namespace App\Repositories\Contracts;
 use App\Models\Asset;
 use App\Models\Portfolio;
 use App\Models\PortfolioAsset;
+use Illuminate\Support\Collection;
 
 interface PortfolioRepositoryInterface
 {
@@ -26,4 +27,15 @@ interface PortfolioRepositoryInterface
      * @return array<int, string>
      */
     public function getAllTrackedTickers(): array;
+
+    /**
+     * @return Collection<int, Asset>
+     */
+    public function getAllTrackedAssets(): Collection;
+
+    /**
+     * @param  array<int, string>  $tickers
+     * @return Collection<int, Asset>
+     */
+    public function findAssetsByTickers(array $tickers): Collection;
 }

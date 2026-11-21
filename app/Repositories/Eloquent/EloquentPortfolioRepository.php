@@ -6,6 +6,7 @@ use App\Models\Asset;
 use App\Models\Portfolio;
 use App\Models\PortfolioAsset;
 use App\Repositories\Contracts\PortfolioRepositoryInterface;
+use Illuminate\Support\Collection;
 
 class EloquentPortfolioRepository implements PortfolioRepositoryInterface
 {
@@ -55,5 +56,30 @@ class EloquentPortfolioRepository implements PortfolioRepositoryInterface
             ->orderBy('ticker')
             ->pluck('ticker')
             ->all();
+    }
+
+    public function getAllTrackedAssets(): Collection
+    {
+        return Asset::query()
+            ->whereHas('portfolioAssets', static fn ($query) => $query->where('quantity', '>', 0))
+            ->orderBy('ticker')
+            ->get();
+    }
+
+    public function findAssetsByTickers(array $tickers): Collection
+    {
+        $normalized = array_values(array_filter(array_map(
+            static fn (string $ticker): string => strtoupper(trim($ticker)),
+            $tickers,
+        )));
+
+        if ($normalized === []) {
+            return collect();
+        }
+
+        return Asset::query()
+            ->whereIn('ticker', $normalized)
+            ->orderBy('ticker')
+            ->get();
     }
 }

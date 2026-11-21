@@ -48,12 +48,12 @@ O FinTwin atua como um **Gêmeo Digital Financeiro** que espelha a vida financei
 
 ---
 
-## 3. Fluxo Planejado das Próximas Fases
+## 3. Fluxo de Ingestão (Implementado) e Próximas Fases
 
-- **Fase 3 (Ingestão Redis / Horizon):**
-  - `SyncPluggyBankTransactionsJob`: busca contas e transações na Pluggy, categoriza e atualiza saldos.
-  - `SyncPluggyCreditInvoicesJob`: sincroniza cartões/faturas e executa o *unrolling* de compras parceladas em `credit_transactions` futuras.
-  - `SyncAssetPricesJob` e `SyncFutureDividendsJob`: consomem `BrapiClient` para atualizar `assets` e `dividends_schedule`.
+- **Fase 3 (Ingestão Redis / Horizon — Implementada):**
+  - `POST /api/v1/pluggy/connect-token`: gera `connect_token` do usuário autenticado para o fluxo Pluggy Connect no mobile.
+  - `POST /api/v1/sync/open-finance`: dispara `BankSyncRequestedEvent`, enfileirando `SyncPluggyBankTransactionsJob` (categorização automática via `TransactionCategorizerService`) e `SyncPluggyCreditInvoicesJob` (desdobramento de parcelas futuras via `CreditInstallmentUnrollerService`, recalculando faturas `future` e invalidando versão do cache em `SimulationCacheInvalidator`).
+  - `SyncAssetPricesJob` e `SyncFutureDividendsJob`: consomem `BrapiClient` para atualizar `assets` e `dividends_schedule` sem duplicatas.
 - **Fase 4 (Core do Gêmeo Digital):**
   - `FutureDebtCommitmentService`: consulta `CreditCardRepositoryInterface::getMonthlyCommittedInstallments` para medir o peso mensal das parcelas sobre a renda.
   - `FinancialSimulationService`: recebe `SimulationRequestDto`, combina saldo líquido + fluxo mensal + compromissos de cartão + proventos futuros + cenário simulado e armazena resultado em cache Redis (`Cache::remember`).

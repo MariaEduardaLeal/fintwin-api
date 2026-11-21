@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Integrations\Brapi\BrapiClient;
 use App\Integrations\DeepSeek\DeepSeekClient;
+use App\Integrations\Google\GoogleAuthClient;
 use App\Integrations\Pluggy\PluggyClient;
 use App\Integrations\Support\GuzzleClientFactory;
 use App\Observability\OpenTelemetryService;
@@ -78,6 +79,21 @@ class AppServiceProvider extends ServiceProvider
                     connectTimeout: (int) $config['connect_timeout'],
                 ),
                 apiToken: (string) ($config['api_token'] ?? ''),
+            );
+        });
+
+        $this->app->singleton(GoogleAuthClient::class, function ($app): GoogleAuthClient {
+            /** @var GuzzleClientFactory $factory */
+            $factory = $app->make(GuzzleClientFactory::class);
+            $config = config('integrations.google');
+
+            return new GoogleAuthClient(
+                http: $factory->make(
+                    baseUri: (string) $config['tokeninfo_base_url'],
+                    timeout: (int) $config['timeout'],
+                    connectTimeout: (int) $config['connect_timeout'],
+                ),
+                allowedClientIds: (array) ($config['client_ids'] ?? []),
             );
         });
 

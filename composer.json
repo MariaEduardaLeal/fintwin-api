@@ -9,6 +9,7 @@
         "php": "^8.3",
         "eduardaleal/laravel-clean-flow": "^2.0",
         "laravel/framework": "^13.17",
+        "laravel/horizon": "^5.52",
         "laravel/sanctum": "^4.4",
         "laravel/tinker": "^3.0",
         "open-telemetry/exporter-otlp": "^1.5",

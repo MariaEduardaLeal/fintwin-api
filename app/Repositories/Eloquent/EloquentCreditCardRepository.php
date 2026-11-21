@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\InvoiceStatus;
 use App\Models\CreditCard;
 use App\Models\CreditTransaction;
 use App\Models\Invoice;
@@ -38,6 +39,45 @@ class EloquentCreditCardRepository implements CreditCardRepositoryInterface
             ],
             $attributes,
         );
+    }
+
+    public function findOrCreateFutureInvoice(
+        int $userId,
+        int $creditCardId,
+        string $referenceMonth,
+        CarbonInterface $closingDate,
+        CarbonInterface $dueDate,
+    ): Invoice {
+        return Invoice::query()->firstOrCreate(
+            [
+                'user_id' => $userId,
+                'credit_card_id' => $creditCardId,
+                'reference_month' => $referenceMonth,
+            ],
+            [
+                'closing_date' => $closingDate->toDateString(),
+                'due_date' => $dueDate->toDateString(),
+                'total_amount' => 0,
+                'paid_amount' => 0,
+                'status' => InvoiceStatus::Future,
+            ],
+        );
+    }
+
+    public function recalculateFutureInvoicesTotal(int $creditCardId): void
+    {
+        $futureInvoices = Invoice::query()
+            ->where('credit_card_id', $creditCardId)
+            ->where('status', InvoiceStatus::Future->value)
+            ->get();
+
+        foreach ($futureInvoices as $invoice) {
+            $sum = (float) CreditTransaction::query()
+                ->where('invoice_id', $invoice->id)
+                ->sum('amount');
+
+            $invoice->update(['total_amount' => round($sum, 2)]);
+        }
     }
 
     public function upsertCreditTransactionInstallment(array $match, array $attributes): CreditTransaction

@@ -84,6 +84,32 @@ class ApiClientsTest extends TestCase
         ], $body);
     }
 
+    public function test_pluggy_fetches_v2_transactions_with_cursor_filter(): void
+    {
+        $history = [];
+        $mock = new MockHandler([
+            new Response(200, [], json_encode(['apiKey' => 'pluggy-jwt-123'], JSON_THROW_ON_ERROR)),
+            new Response(200, [], json_encode(['results' => [['id' => 'tx-1']], 'next' => null], JSON_THROW_ON_ERROR)),
+        ]);
+
+        $stack = HandlerStack::create($mock);
+        $stack->push(Middleware::history($history));
+
+        $http = (new GuzzleClientFactory)->make('https://api.pluggy.ai', handlerStack: $stack, maxRetries: 0);
+        $cache = new CacheRepository(new ArrayStore);
+
+        $client = new PluggyClient($http, $cache, 'client-id', 'client-secret', 6000);
+
+        $response = $client->getTransactions('acc-1', ['after' => 'cur-2']);
+
+        $this->assertSame('tx-1', $response['results'][0]['id']);
+        $this->assertCount(2, $history);
+        $this->assertSame('GET', $history[1]['request']->getMethod());
+        $this->assertSame('/v2/transactions', $history[1]['request']->getUri()->getPath());
+        $this->assertStringContainsString('accountId=acc-1', $history[1]['request']->getUri()->getQuery());
+        $this->assertStringContainsString('after=cur-2', $history[1]['request']->getUri()->getQuery());
+    }
+
     public function test_pluggy_throws_exception_when_credentials_are_missing(): void
     {
         $http = (new GuzzleClientFactory)->make('https://api.pluggy.ai', handlerStack: HandlerStack::create(new MockHandler), maxRetries: 0);

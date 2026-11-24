@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Auth\AuthController;
+use App\Http\Controllers\Api\V1\DashboardSummaryController;
 use App\Http\Controllers\Api\V1\HealthCheckController;
 use App\Http\Controllers\Api\V1\OpenFinanceSyncController;
 use App\Http\Controllers\Api\V1\PluggyConnectController;
@@ -28,6 +29,7 @@ Route::prefix('v1')->group(function (): void {
             'data' => $request->user(),
         ]))->name('api.v1.me');
 
+        Route::get('/dashboard/summary', DashboardSummaryController::class)->name('api.v1.dashboard.summary');
         Route::post('/pluggy/connect-token', PluggyConnectController::class)->name('api.v1.pluggy.connect_token');
         Route::post('/sync/open-finance', OpenFinanceSyncController::class)->name('api.v1.sync.open_finance');
     });

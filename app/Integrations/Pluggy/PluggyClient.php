@@ -83,7 +83,7 @@ class PluggyClient extends BaseApiClient
      */
     public function getTransactions(string $accountId, array $filters = []): array
     {
-        return $this->authorizedRequest('GET', 'transactions', [
+        return $this->authorizedRequest('GET', 'v2/transactions', [
             'query' => array_merge(['accountId' => $accountId], $filters),
         ]);
     }

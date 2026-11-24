@@ -13,8 +13,10 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'user_id',
     'bank_account_id',
     'category_id',
+    'is_category_manual',
     'pluggy_transaction_id',
     'description',
+    'notes',
     'amount',
     'type',
     'transaction_date',
@@ -36,6 +38,7 @@ class Transaction extends Model
             'type' => TransactionType::class,
             'transaction_date' => 'date',
             'status' => TransactionStatus::class,
+            'is_category_manual' => 'boolean',
             'metadata' => 'array',
         ];
     }

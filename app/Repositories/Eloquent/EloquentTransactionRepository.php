@@ -8,6 +8,7 @@ use App\Models\BankAccount;
 use App\Models\Transaction;
 use App\Repositories\Contracts\TransactionRepositoryInterface;
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 class EloquentTransactionRepository implements TransactionRepositoryInterface
@@ -38,10 +39,44 @@ class EloquentTransactionRepository implements TransactionRepositoryInterface
 
     public function upsertTransaction(int $userId, array $match, array $attributes): Transaction
     {
-        return Transaction::query()->updateOrCreate(
-            array_merge($match, ['user_id' => $userId]),
-            $attributes,
-        );
+        $lookup = array_merge($match, ['user_id' => $userId]);
+        $existing = Transaction::query()->where($lookup)->first();
+
+        if ($existing !== null && $existing->is_category_manual) {
+            unset($attributes['category_id']);
+        }
+
+        return Transaction::query()->updateOrCreate($lookup, $attributes);
+    }
+
+    public function paginateAccountTransactions(
+        int $userId,
+        int $bankAccountId,
+        int $perPage = 30,
+        ?string $search = null,
+        ?int $categoryId = null,
+    ): LengthAwarePaginator {
+        return Transaction::query()
+            ->with('category')
+            ->where('user_id', $userId)
+            ->where('bank_account_id', $bankAccountId)
+            ->when(
+                $search !== null && trim($search) !== '',
+                static function ($query) use ($search): void {
+                    $term = '%'.trim($search).'%';
+                    $query->where(static function ($nested) use ($term): void {
+                        $nested->where('description', 'like', $term)
+                            ->orWhere('notes', 'like', $term);
+                    });
+                },
+            )
+            ->when(
+                $categoryId !== null,
+                static fn ($query) => $query->where('category_id', $categoryId),
+            )
+            ->orderByDesc('transaction_date')
+            ->orderByDesc('id')
+            ->paginate($perPage);
     }
 
     public function getTransactionsInPeriod(int $userId, CarbonInterface $from, CarbonInterface $to): Collection

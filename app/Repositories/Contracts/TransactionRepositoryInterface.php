@@ -5,6 +5,7 @@ namespace App\Repositories\Contracts;
 use App\Models\BankAccount;
 use App\Models\Transaction;
 use Carbon\CarbonInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 interface TransactionRepositoryInterface
@@ -32,6 +33,17 @@ interface TransactionRepositoryInterface
      * @return Collection<int, Transaction>
      */
     public function getTransactionsInPeriod(int $userId, CarbonInterface $from, CarbonInterface $to): Collection;
+
+    /**
+     * @return LengthAwarePaginator<int, Transaction>
+     */
+    public function paginateAccountTransactions(
+        int $userId,
+        int $bankAccountId,
+        int $perPage = 30,
+        ?string $search = null,
+        ?int $categoryId = null,
+    ): LengthAwarePaginator;
 
     /**
      * @return Collection<string, array{income: float, expense: float, net: float}>

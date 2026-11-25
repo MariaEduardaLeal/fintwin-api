@@ -15,6 +15,8 @@ return [
         'base_url' => env('PLUGGY_BASE_URL', 'https://api.pluggy.ai'),
         'client_id' => env('PLUGGY_CLIENT_ID'),
         'client_secret' => env('PLUGGY_CLIENT_SECRET'),
+        'webhook_url' => env('PLUGGY_WEBHOOK_URL'),
+        'webhook_secret' => env('PLUGGY_WEBHOOK_SECRET'),
         'timeout' => (int) env('PLUGGY_TIMEOUT', 15),
         'connect_timeout' => (int) env('PLUGGY_CONNECT_TIMEOUT', 5),
         'api_key_ttl' => (int) env('PLUGGY_API_KEY_TTL', 6000),

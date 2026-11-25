@@ -57,9 +57,9 @@ class SyncPluggyJobsTest extends TestCase
 
         $pluggy->shouldReceive('getTransactions')
             ->once()
-            ->with('acc-checking-1', ['page' => 1, 'pageSize' => 200])
+            ->with('acc-checking-1', [])
             ->andReturn([
-                'totalPages' => 2,
+                'next' => '?accountId=acc-checking-1&after=cursor-2',
                 'results' => [
                     [
                         'id' => 'tx-salary',
@@ -74,9 +74,9 @@ class SyncPluggyJobsTest extends TestCase
 
         $pluggy->shouldReceive('getTransactions')
             ->once()
-            ->with('acc-checking-1', ['page' => 2, 'pageSize' => 200])
+            ->with('acc-checking-1', ['after' => 'cursor-2'])
             ->andReturn([
-                'totalPages' => 2,
+                'next' => null,
                 'results' => [
                     [
                         'id' => 'tx-ifood',
@@ -157,9 +157,9 @@ class SyncPluggyJobsTest extends TestCase
 
         $pluggy->shouldReceive('getTransactions')
             ->once()
-            ->with('card-acc-9', ['page' => 1, 'pageSize' => 200])
+            ->with('card-acc-9', [])
             ->andReturn([
-                'totalPages' => 1,
+                'next' => null,
                 'results' => [
                     [
                         'id' => 'ctx-tv-1',

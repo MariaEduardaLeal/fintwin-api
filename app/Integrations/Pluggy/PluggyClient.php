@@ -42,12 +42,25 @@ class PluggyClient extends BaseApiClient
     /**
      * @return array<string, mixed>
      */
-    public function createConnectToken(?string $itemId = null, ?string $clientUserId = null): array
-    {
-        $payload = array_filter([
-            'itemId' => $itemId,
+    public function createConnectToken(
+        ?string $itemId = null,
+        ?string $clientUserId = null,
+        ?string $webhookUrl = null,
+    ): array {
+        $payload = [];
+
+        if ($itemId !== null && $itemId !== '') {
+            $payload['itemId'] = $itemId;
+        }
+
+        $options = array_filter([
             'clientUserId' => $clientUserId,
+            'webhookUrl' => $webhookUrl,
         ], static fn (?string $value): bool => $value !== null && $value !== '');
+
+        if ($options !== []) {
+            $payload['options'] = $options;
+        }
 
         return $this->authorizedRequest('POST', 'connect_token', [
             'json' => $payload,
@@ -70,7 +83,7 @@ class PluggyClient extends BaseApiClient
      */
     public function getTransactions(string $accountId, array $filters = []): array
     {
-        return $this->authorizedRequest('GET', 'transactions', [
+        return $this->authorizedRequest('GET', 'v2/transactions', [
             'query' => array_merge(['accountId' => $accountId], $filters),
         ]);
     }
